@@ -63,7 +63,13 @@ def final_answer(state: dict):
         m.content for m in reversed(messages) if isinstance(m, HumanMessage)
     )
 
+    language = state.get("language", "English")
     qa_prompt = QA_PROMPT.format(context=context, input=question)
+    qa_prompt += (
+        f"\n\nLanguage requirement: Respond entirely in {language}. "
+        "Keep legal act names and section numbers accurate, but explain them "
+        "naturally in the requested language."
+    )
 
     result = model.invoke([HumanMessage(content=qa_prompt)])
     answer_text = re.split(r"\n\s*Sources\s*:", result.content, maxsplit=1, flags=re.IGNORECASE)[0].strip()

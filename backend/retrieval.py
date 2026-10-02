@@ -16,9 +16,11 @@ load_dotenv()
 agent = agent_builder_graph(state=MessagesState).compile(checkpointer=memory)
 
 
-def agent_invoke(query: str, session_id: str | None = None):
+def agent_invoke(
+    query: str, session_id: str | None = None, language: str = "English"
+):
     session_id = session_id or str(uuid.uuid4())
-    cache_key = cache.make_cache_key(query)
+    cache_key = cache.make_cache_key(f"{language}:{query}")
 
     history = cache.get_chat_history(session_id)
 
@@ -31,8 +33,10 @@ def agent_invoke(query: str, session_id: str | None = None):
 
     config = {"configurable": {"thread_id": session_id}}
 
-    result = agent.invoke({"messages":
-                            [HumanMessage(content=query)]}, 
+    result = agent.invoke({
+                            "messages": [HumanMessage(content=query)],
+                            "language": language,
+                           },
                             config=config)
 
     answer = result["messages"][-1]
