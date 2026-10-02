@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -20,12 +20,6 @@ type Citation = {
   source?: string;
 };
 
-type Message = {
-  role: 'user' | 'assistant';
-  content: string;
-  citations?: Citation[];
-};
-
 type QueryResponse = {
   answer: string;
   citations: Citation[];
@@ -36,30 +30,34 @@ const API_URL =
   Platform.OS === 'web'
     ? process.env.EXPO_PUBLIC_WEB_API_URL ?? 'http://127.0.0.1:8001'
     : process.env.EXPO_PUBLIC_API_URL ?? 'http://127.0.0.1:8001';
-const WELCOME: Message = {
-  role: 'assistant',
-  content: 'Ask a question about Indian law. I will search the legal sources and show the passages used.',
-};
+
+const QUICK_STARTS = [
+  "My landlord won't return my deposit after I moved out...",
+  'My manager keeps sending inappropriate messages at work...',
+  'I paid for a service but the seller will not provide a refund...',
+];
+
+function cleanAnswer(answer: string) {
+  return answer.split(/\n\s*Sources\s*:/i)[0].trim();
+}
 
 export default function App() {
-  const [messages, setMessages] = useState<Message[]>([WELCOME]);
-  const [draft, setDraft] = useState('');
+  const [question, setQuestion] = useState('');
+  const [submittedQuestion, setSubmittedQuestion] = useState('');
+  const [answer, setAnswer] = useState('');
+  const [citations, setCitations] = useState<Citation[]>([]);
   const [sessionId, setSessionId] = useState<string>();
+  const [isAnswerScreen, setIsAnswerScreen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const scrollViewRef = useRef<ScrollView>(null);
+  const [isFocused, setIsFocused] = useState(false);
 
-  useEffect(() => {
-    scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages, isLoading]);
-
-  async function submitQuestion() {
-    const query = draft.trim();
+  async function getAnswer() {
+    const query = question.trim();
     if (!query || isLoading) return;
 
-    setDraft('');
     setError(undefined);
-    setMessages((current) => [...current, { role: 'user', content: query }]);
+    setSubmittedQuestion(query);
     setIsLoading(true);
 
     try {
@@ -70,243 +68,251 @@ export default function App() {
       });
 
       if (!response.ok) {
-        throw new Error(`The server returned ${response.status}.`);
+        throw new Error(`The service returned ${response.status}. Try again.`);
       }
 
       const result = (await response.json()) as QueryResponse;
       setSessionId(result.session_id);
-      setMessages((current) => [
-        ...current,
-        { role: 'assistant', content: result.answer, citations: result.citations },
-      ]);
+      setAnswer(cleanAnswer(result.answer));
+      setCitations(result.citations ?? []);
+      setIsAnswerScreen(true);
     } catch (requestError) {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : 'Unable to reach LawGlance.',
+          : 'The answer could not be loaded. Check your connection and try again.',
       );
     } finally {
       setIsLoading(false);
     }
   }
 
+  function startOver() {
+    setQuestion('');
+    setSubmittedQuestion('');
+    setAnswer('');
+    setCitations([]);
+    setError(undefined);
+    setIsAnswerScreen(false);
+  }
+
+  if (isAnswerScreen) {
+    return (
+      <SafeAreaView style={styles.screen}>
+        <StatusBar style="dark" />
+        <ScrollView contentContainerStyle={styles.answerScreen}>
+          <Pressable accessibilityLabel="Go back" onPress={startOver} style={styles.backLink}>
+            <Text style={styles.backChevron}>‹</Text>
+            <Text style={styles.backText}>Back</Text>
+          </Pressable>
+          <Text style={styles.questionLabel}>Your question</Text>
+          <Text style={styles.question}>{submittedQuestion}</Text>
+          <Text style={styles.answerHeading}>Here is where you stand.</Text>
+          <Text style={styles.answer}>{answer}</Text>
+
+          {citations.length > 0 && (
+            <View style={styles.sources}>
+              <Text style={styles.sourcesHeading}>Sources</Text>
+              {citations.map((citation) => (
+                <View key={`${citation.number}-${citation.label}`} style={styles.sourceRow}>
+                  <Text style={styles.sourceLabel}>[{citation.number}] {citation.label}</Text>
+                  <Text style={styles.sourceSnippet}>{citation.snippet}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <Pressable
+            accessibilityLabel="Ask another question"
+            onPress={startOver}
+            style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.primaryButtonText}>Ask another question</Text>
+          </Pressable>
+          <Text style={styles.footnote}>
+            General guidance, not a lawyer's advice.
+          </Text>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="light" />
+    <SafeAreaView style={styles.screen}>
+      <StatusBar style="dark" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.container}
       >
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.eyebrow}>LAWGLANCE</Text>
-            <Text style={styles.title}>Legal clarity, grounded in sources.</Text>
-          </View>
-          <View style={styles.statusDot} />
-        </View>
+        <ScrollView contentContainerStyle={styles.homeScreen} keyboardShouldPersistTaps="handled">
+          <Text style={styles.brand}>LawGlance</Text>
+          <Text style={styles.headline}>Tell us what happened.</Text>
+          <Text style={styles.subtext}>
+            Explain your situation in your own words. We will help you understand what to do next.
+          </Text>
 
-        <ScrollView
-          ref={scrollViewRef}
-          contentContainerStyle={styles.messageList}
-          keyboardShouldPersistTaps="handled"
-        >
-          {messages.map((message, index) => (
-            <View
-              key={`${message.role}-${index}`}
-              style={message.role === 'user' ? styles.userMessage : styles.assistantMessage}
+          <View style={[styles.inputBlock, isFocused && styles.inputBlockFocused]}>
+            <TextInput
+              value={question}
+              onChangeText={setQuestion}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              placeholder={QUICK_STARTS[0]}
+              placeholderTextColor="rgba(23, 25, 28, 0.62)"
+              style={styles.questionInput}
+              multiline
+              maxLength={2000}
+              textAlignVertical="top"
+            />
+            <Pressable
+              accessibilityLabel="Get answer"
+              disabled={!question.trim() || isLoading}
+              onPress={getAnswer}
+              style={({ pressed }) => [
+                styles.inputButton,
+                (!question.trim() || isLoading) && styles.disabledButton,
+                pressed && styles.pressed,
+              ]}
             >
-              <Text style={styles.messageLabel}>
-                {message.role === 'user' ? 'YOU' : 'LAWGLANCE'}
-              </Text>
-              <Text style={styles.messageText}>{message.content}</Text>
-              {message.citations?.map((citation) => (
-                <View style={styles.citation} key={`${citation.number}-${citation.label}`}>
-                  <Text style={styles.citationTitle}>[{citation.number}] {citation.label}</Text>
-                  <Text style={styles.citationSnippet}>{citation.snippet}</Text>
-                </View>
-              ))}
-            </View>
-          ))}
-          {isLoading && (
-            <View style={styles.loadingRow}>
-              <ActivityIndicator color="#d9a441" />
-              <Text style={styles.loadingText}>Searching legal sources...</Text>
-            </View>
-          )}
-        </ScrollView>
+              {isLoading ? (
+                <ActivityIndicator color={colors.bg} />
+              ) : (
+                <Text style={styles.inputButtonText}>Get answer</Text>
+              )}
+            </Pressable>
+          </View>
 
-        {error && <Text style={styles.error}>{error}</Text>}
-        <View style={styles.composer}>
-          <TextInput
-            value={draft}
-            onChangeText={setDraft}
-            onSubmitEditing={submitQuestion}
-            placeholder="Ask a legal question..."
-            placeholderTextColor="#7f8b91"
-            style={styles.input}
-            multiline
-            maxLength={2000}
-          />
-          <Pressable
-            accessibilityLabel="Send question"
-            disabled={!draft.trim() || isLoading}
-            onPress={submitQuestion}
-            style={({ pressed }) => [
-              styles.sendButton,
-              (!draft.trim() || isLoading) && styles.sendButtonDisabled,
-              pressed && styles.sendButtonPressed,
-            ]}
-          >
-            <Text style={styles.sendText}>SEND</Text>
-          </Pressable>
-        </View>
+          {error && <Text style={styles.error}>{error}</Text>}
+
+          <View style={styles.quickStarts}>
+            {QUICK_STARTS.slice(1).map((prompt) => (
+              <Pressable
+                key={prompt}
+                onPress={() => setQuestion(prompt)}
+                style={({ pressed }) => [styles.quickRow, pressed && styles.quickRowPressed]}
+              >
+                <Text style={styles.quickText}>{prompt}</Text>
+                <Text style={styles.quickPlus}>+</Text>
+              </Pressable>
+            ))}
+          </View>
+        </ScrollView>
+        <Text style={styles.homeFootnote}>Private by default. General guidance, not a lawyer's advice.</Text>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
+const colors = {
+  bg: '#FAFAF8',
+  ink: '#17191C',
+  muted: '#5F656D',
+  line: '#DCDDD8',
+  accent: '#F4B400',
+};
+
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#10252b',
+  screen: { flex: 1, backgroundColor: colors.bg },
+  container: { flex: 1 },
+  homeScreen: {
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 72,
+    paddingBottom: 32,
   },
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 22,
-    paddingTop: 22,
-    paddingBottom: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: '#294149',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  eyebrow: {
-    color: '#d9a441',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 2,
-    marginBottom: 7,
-  },
-  title: {
-    color: '#f3eee4',
+  brand: {
+    color: colors.ink,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' }),
     fontSize: 22,
-    fontWeight: '700',
-    maxWidth: 300,
+    marginBottom: 36,
   },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#7db49a',
-    marginTop: 4,
+  headline: {
+    color: colors.ink,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' }),
+    fontSize: 42,
+    lineHeight: 45,
+    marginBottom: 14,
   },
-  messageList: {
-    padding: 18,
-    gap: 14,
-    flexGrow: 1,
+  subtext: { color: colors.muted, fontSize: 17, lineHeight: 25, marginBottom: 34 },
+  inputBlock: {
+    backgroundColor: colors.accent,
+    borderRadius: 22,
+    padding: 20,
+    paddingBottom: 16,
+    minHeight: 220,
   },
-  userMessage: {
+  inputBlockFocused: {
+    borderWidth: 3,
+    borderColor: colors.ink,
+    padding: 17,
+    paddingBottom: 13,
+  },
+  questionInput: { color: colors.ink, fontSize: 19, lineHeight: 27, minHeight: 132, padding: 0 },
+  inputButton: {
     alignSelf: 'flex-end',
-    backgroundColor: '#d9a441',
-    padding: 15,
-    maxWidth: '88%',
-    borderRadius: 4,
+    minHeight: 48,
+    minWidth: 128,
+    paddingHorizontal: 22,
+    borderRadius: 24,
+    backgroundColor: colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  assistantMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#19343c',
-    padding: 16,
-    maxWidth: '94%',
-    borderLeftWidth: 3,
-    borderLeftColor: '#d9a441',
-  },
-  messageLabel: {
-    color: '#a8bcc0',
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    marginBottom: 8,
-  },
-  messageText: {
-    color: '#f3eee4',
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  citation: {
+  inputButtonText: { color: colors.bg, fontSize: 16, fontWeight: '600' },
+  disabledButton: { opacity: 0.45 },
+  quickStarts: { marginTop: 32 },
+  quickRow: {
+    minHeight: 66,
     borderTopWidth: 1,
-    borderTopColor: '#31515a',
-    marginTop: 14,
-    paddingTop: 10,
-  },
-  citationTitle: {
-    color: '#d9a441',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  citationSnippet: {
-    color: '#b7c7c9',
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 4,
-  },
-  loadingRow: {
+    borderTopColor: colors.line,
+    paddingVertical: 18,
+    paddingHorizontal: 2,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    padding: 12,
+    justifyContent: 'space-between',
   },
-  loadingText: {
-    color: '#a8bcc0',
-    fontSize: 13,
+  quickRowPressed: { opacity: 0.6 },
+  quickText: { color: colors.ink, fontSize: 17, lineHeight: 24, flex: 1, paddingRight: 16 },
+  quickPlus: { color: colors.muted, fontSize: 24, fontWeight: '300' },
+  error: { color: colors.ink, fontSize: 14, lineHeight: 20, marginTop: 14 },
+  homeFootnote: { color: colors.muted, fontSize: 14, textAlign: 'center', paddingHorizontal: 24, paddingBottom: 14 },
+  answerScreen: {
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 32,
   },
-  error: {
-    color: '#f0a28d',
-    fontSize: 13,
-    paddingHorizontal: 18,
-    paddingBottom: 8,
+  backLink: { minHeight: 44, flexDirection: 'row', alignItems: 'center', marginBottom: 28 },
+  backChevron: { color: colors.muted, fontSize: 28, lineHeight: 28, marginRight: 7 },
+  backText: { color: colors.muted, fontSize: 16 },
+  questionLabel: { color: colors.muted, fontSize: 14, marginBottom: 8 },
+  question: { color: colors.ink, fontSize: 19, lineHeight: 27, marginBottom: 34 },
+  answerHeading: {
+    color: colors.ink,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' }),
+    fontSize: 30,
+    lineHeight: 34,
+    marginBottom: 14,
   },
-  composer: {
-    backgroundColor: '#19343c',
-    borderTopWidth: 1,
-    borderTopColor: '#294149',
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 10,
-  },
-  input: {
-    flex: 1,
-    minHeight: 48,
-    maxHeight: 120,
-    backgroundColor: '#10252b',
-    color: '#f3eee4',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: '#31515a',
-    borderRadius: 3,
-  },
-  sendButton: {
-    minHeight: 48,
-    paddingHorizontal: 16,
+  answer: { color: colors.ink, fontSize: 16, lineHeight: 24 },
+  sources: { marginTop: 32 },
+  sourcesHeading: { color: colors.ink, fontSize: 19, fontWeight: '600', paddingBottom: 14 },
+  sourceRow: { borderTopWidth: 1, borderTopColor: colors.line, paddingVertical: 14 },
+  sourceLabel: { color: colors.ink, fontSize: 15, fontWeight: '600', lineHeight: 21 },
+  sourceSnippet: { color: colors.muted, fontSize: 14, lineHeight: 20, marginTop: 6 },
+  primaryButton: {
+    minHeight: 56,
+    borderRadius: 28,
+    backgroundColor: colors.ink,
+    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#d9a441',
-    borderRadius: 3,
+    marginTop: 36,
   },
-  sendButtonDisabled: {
-    opacity: 0.4,
-  },
-  sendButtonPressed: {
-    opacity: 0.75,
-  },
-  sendText: {
-    color: '#10252b',
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
+  primaryButtonText: { color: colors.bg, fontSize: 16, fontWeight: '600' },
+  footnote: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 14 },
+  pressed: { opacity: 0.75 },
 });

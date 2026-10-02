@@ -1,0 +1,249 @@
+{
+  "metadata": {
+    "dataset_name": "LawGlance Lawyer Directory Demo",
+    "version": "0.1.0",
+    "is_dummy_data": true,
+    "notice": "All names, contact details, fees, and availability in this file are fictional placeholders for UI development. Do not contact or rely on them for legal services.",
+    "default_country": "India",
+    "supported_languages": [
+      "English",
+      "Hindi",
+      "Marathi",
+      "Tamil",
+      "Telugu",
+      "Bengali"
+    ]
+  },
+  "lawyers": [
+    {
+      "id": "demo-lawyer-001",
+      "name": "Ananya Mehta",
+      "display_name": "Adv. Ananya Mehta",
+      "title": "Advocate",
+      "gender": "female",
+      "bar_council": "Demo Bar Council Listing",
+      "bar_registration_number": "DEMO-MH-001",
+      "years_of_experience": 9,
+      "specializations": [
+        "workplace sexual harassment",
+        "employment law",
+        "women and child protection"
+      ],
+      "practice_areas": [
+        "POSH Act",
+        "employment disputes",
+        "internal committee advisory",
+        "workplace policy review"
+      ],
+      "jurisdictions": ["Maharashtra", "India"],
+      "languages": ["English", "Hindi", "Marathi"],
+      "consultation_modes": ["video", "voice", "chat"],
+      "consultation_duration_minutes": [30, 60],
+      "consultation_fee_inr": {
+        "currency": "INR",
+        "amount": 1200,
+        "note": "Demo amount only"
+      },
+      "availability": {
+        "timezone": "Asia/Kolkata",
+        "days": ["Monday", "Wednesday", "Friday"],
+        "hours": "18:00-21:00",
+        "next_available_slot": "2026-10-05T18:30:00+05:30"
+      },
+      "contact": {
+        "email": "ananya.mehta.demo@example.invalid",
+        "phone": "+91-00000-00001",
+        "profile_url": "https://example.invalid/lawglance/demo-lawyer-001"
+      },
+      "verification": {
+        "status": "demo_only",
+        "verified": false,
+        "verified_at": null
+      }
+    },
+    {
+      "id": "demo-lawyer-002",
+      "name": "Rohan Desai",
+      "display_name": "Adv. Rohan Desai",
+      "title": "Advocate",
+      "gender": "male",
+      "bar_council": "Demo Bar Council Listing",
+      "bar_registration_number": "DEMO-MH-002",
+      "years_of_experience": 14,
+      "specializations": [
+        "landlord tenant disputes",
+        "property law",
+        "civil litigation"
+      ],
+      "practice_areas": [
+        "rent control",
+        "eviction disputes",
+        "property possession",
+        "injunctions"
+      ],
+      "jurisdictions": ["Maharashtra", "India"],
+      "languages": ["English", "Hindi", "Marathi"],
+      "consultation_modes": ["video", "voice", "in_person"],
+      "consultation_duration_minutes": [30, 60],
+      "consultation_fee_inr": {
+        "currency": "INR",
+        "amount": 1500,
+        "note": "Demo amount only"
+      },
+      "availability": {
+        "timezone": "Asia/Kolkata",
+        "days": ["Tuesday", "Thursday", "Saturday"],
+        "hours": "10:00-14:00",
+        "next_available_slot": "2026-10-06T10:00:00+05:30"
+      },
+      "contact": {
+        "email": "rohan.desai.demo@example.invalid",
+        "phone": "+91-00000-00002",
+        "profile_url": "https://example.invalid/lawglance/demo-lawyer-002"
+      },
+      "verification": {
+        "status": "demo_only",
+        "verified": false,
+        "verified_at": null
+      }
+    },
+    {
+      "id": "demo-lawyer-003",
+      "name": "Kavya Iyer",
+      "display_name": "Adv. Kavya Iyer",
+      "title": "Advocate",
+      "gender": "female",
+      "bar_council": "Demo Bar Council Listing",
+      "bar_registration_number": "DEMO-TN-001",
+      "years_of_experience": 7,
+      "specializations": [
+        "consumer disputes",
+        "online fraud",
+        "technology law"
+      ],
+      "practice_areas": [
+        "consumer complaints",
+        "e-commerce disputes",
+        "cyber fraud",
+        "privacy complaints"
+      ],
+      "jurisdictions": ["Tamil Nadu", "India"],
+      "languages": ["English", "Hindi", "Tamil"],
+      "consultation_modes": ["video", "voice", "chat"],
+      "consultation_duration_minutes": [30, 60],
+      "consultation_fee_inr": {
+        "currency": "INR",
+        "amount": 900,
+        "note": "Demo amount only"
+      },
+      "availability": {
+        "timezone": "Asia/Kolkata",
+        "days": ["Monday", "Tuesday", "Saturday"],
+        "hours": "17:00-20:00",
+        "next_available_slot": "2026-10-05T17:00:00+05:30"
+      },
+      "contact": {
+        "email": "kavya.iyer.demo@example.invalid",
+        "phone": "+91-00000-00003",
+        "profile_url": "https://example.invalid/lawglance/demo-lawyer-003"
+      },
+      "verification": {
+        "status": "demo_only",
+        "verified": false,
+        "verified_at": null
+      }
+    },
+    {
+      "id": "demo-lawyer-004",
+      "name": "Arjun Banerjee",
+      "display_name": "Adv. Arjun Banerjee",
+      "title": "Advocate",
+      "gender": "male",
+      "bar_council": "Demo Bar Council Listing",
+      "bar_registration_number": "DEMO-WB-001",
+      "years_of_experience": 11,
+      "specializations": [
+        "criminal law",
+        "bail and arrest matters",
+        "cybercrime"
+      ],
+      "practice_areas": [
+        "BNS offences",
+        "BNSS procedure",
+        "FIR guidance",
+        "bail applications"
+      ],
+      "jurisdictions": ["West Bengal", "India"],
+      "languages": ["English", "Hindi", "Bengali"],
+      "consultation_modes": ["video", "voice"],
+      "consultation_duration_minutes": [30, 60],
+      "consultation_fee_inr": {
+        "currency": "INR",
+        "amount": 1800,
+        "note": "Demo amount only"
+      },
+      "availability": {
+        "timezone": "Asia/Kolkata",
+        "days": ["Wednesday", "Friday", "Sunday"],
+        "hours": "09:00-12:00",
+        "next_available_slot": "2026-10-07T09:30:00+05:30"
+      },
+      "contact": {
+        "email": "arjun.banerjee.demo@example.invalid",
+        "phone": "+91-00000-00004",
+        "profile_url": "https://example.invalid/lawglance/demo-lawyer-004"
+      },
+      "verification": {
+        "status": "demo_only",
+        "verified": false,
+        "verified_at": null
+      }
+    },
+    {
+      "id": "demo-lawyer-005",
+      "name": "Meera Rao",
+      "display_name": "Adv. Meera Rao",
+      "title": "Advocate",
+      "gender": "female",
+      "bar_council": "Demo Bar Council Listing",
+      "bar_registration_number": "DEMO-KA-001",
+      "years_of_experience": 12,
+      "specializations": [
+        "family law",
+        "child protection",
+        "domestic violence matters"
+      ],
+      "practice_areas": [
+        "POCSO Act",
+        "Domestic Violence Act",
+        "maintenance",
+        "custody and guardianship"
+      ],
+      "jurisdictions": ["Karnataka", "India"],
+      "languages": ["English", "Hindi", "Telugu"],
+      "consultation_modes": ["video", "voice", "chat"],
+      "consultation_duration_minutes": [30, 60],
+      "consultation_fee_inr": {
+        "currency": "INR",
+        "amount": 1300,
+        "note": "Demo amount only"
+      },
+      "availability": {
+        "timezone": "Asia/Kolkata",
+        "days": ["Monday", "Thursday", "Sunday"],
+        "hours": "16:00-19:00",
+        "next_available_slot": "2026-10-06T16:30:00+05:30"
+      },
+      "contact": {
+        "email": "meera.rao.demo@example.invalid",
+        "phone": "+91-00000-00005",
+        "profile_url": "https://example.invalid/lawglance/demo-lawyer-005"
+      },
+      "verification": {
+        "status": "demo_only",
+        "verified": false,
+        "verified_at": null
+      }
+    }
+  ]
+}
